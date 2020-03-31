@@ -19,12 +19,12 @@ urlpatterns = [
     path('search/', views.search, name="search"),
     path('AgentReg/', views.NewUser, name="NewUser"),
     path('Login/', views.loginreq, name="Login"),
+    path('reply/', views.replyy, name="reply"),
     path('Userlogin/', views.loginUser, name="UserLogin"),
     path('signup/', views.signup, name="Signup"),
     path('view_property/<str:property_id>//<str:username>/', views.show_property, name='view_property'),
     path('comment/<str:property_id>//<str:username>/', views.comment, name='comment'),
-    path('view_propertyy/<str:property_id>/', views.show_property_ajax, name='view_property_ajax'),
-    url(r'^login/$', auth_views.LoginView, name='login'),
+    path('reply/<str:comment_id>//<str:username>/', views.send_reply, name='send_reply'),
 ]
 
 

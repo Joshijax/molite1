@@ -5,16 +5,16 @@ from django.conf import settings
 from django.contrib import messages 
 from django.http import HttpResponse
 from moborise.models import  ProfilPicx
-from .models import Agentuploads
+from .models import Agentuploads, uploadsfile
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth import login, authenticate, logout
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from .forms import AgentUploadFileForm, AgentSignUpForm, ProfileUploadForm
 import os
 from moborise.forms import LoginUpForm
-from moborise.models import UserType
+from moborise.models import UserType, Comment
 from django.contrib.auth.decorators import login_required
  
 # Create your views here.
@@ -183,7 +183,14 @@ def bdpa(request):
     
 
     return render(request, template, context)
-
+def show_Agentproperty(request, property_id, username):
+    
+    user = get_object_or_404(User, username=username,)
+    
+    propertyy = Agentuploads.objects.get(id=property_id)
+    comment = Comment.objects.filter(post_id=property_id)
+    
+    return render(request, 'view_agentUpload.html', {'comment': comment,"person":user,'property': propertyy, 'media_url': settings.MEDIA_URL,})
 
 @login_required(login_url='/')
 def upload_file(request):
@@ -194,11 +201,15 @@ def upload_file(request):
         print(user)
         if request.method == 'POST':
             form = AgentUploadFileForm(request.POST, request.FILES)
-
+            files = request.FILES.getlist('file')
+            
             if form.is_valid():
-                new_obj = Agentuploads(file=form.cleaned_data['file'], file2=form.cleaned_data['file2'],property_Name=request.POST['property_Name'], property_Location=request.POST['property_Location'] , property_Type=request.POST['property_Type'], property_Description=request.POST['property_Description'], property_Address=request.POST['property_Address'], username=user, author=request.user)
+                new_obj = Agentuploads(file=form.cleaned_data['file'],property_Name=request.POST['property_Name'], property_Location=request.POST['property_Location'] , property_Type=request.POST['property_Type'], property_Description=request.POST['property_Description'], property_Address=request.POST['property_Address'], username=user, author=request.user)
                 new_obj.save()
 
+                for f in files:
+                    gallery = uploadsfile(post=new_obj, file=f)
+                    gallery.save()
                 messages.add_message(request, messages.SUCCESS, 'image succesfully uploaded')
                 return redirect('Agent:Agentupload')
             else:
@@ -250,3 +261,15 @@ def NewAgent(request):
     
         
         return JsonResponse({'success':'success'})
+
+@login_required(login_url='/')
+def delete(request, id_image):
+    user = request.user
+    file_type = 'image'
+   
+
+    testss = Agentuploads.objects.get(id = id_image,)
+    testss.delete()
+
+    # messages.add_message(request, messages.SUCCESS, f'image {file_name} successfully deleted')
+    return redirect('Agent:Agentupload')

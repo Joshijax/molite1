@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import uploads, Agent, UserType, Comment
+from .models import uploads, Agent, UserType, Comment, Reply
 from django.conf import settings
 from django.contrib import messages 
 from django.http import HttpResponse
@@ -21,7 +21,7 @@ def index(request):
     form = SignUpForm(data=request.POST)
     form2 = LoginUpForm(data=request.POST)
     # loading my forms
-    tests = Agentuploads.objects.all()
+    tests = Agentuploads.objects.all().order_by('uploaded_at')
 
     paginator = Paginator(tests, 8)
     page = request.GET.get('page')
@@ -117,9 +117,20 @@ def loginUser(request):
         form = LoginUpForm()
       
     return render(request, 'login_ajax.html',  {'form': form,})
-   
 
+
+@csrf_exempt
+def replyy(request):
      
+    page = request.POST.get('page')
+    print(page)
+    comment = Comment.objects.filter(id=page)
+    print(comment)
+    context = {'comment': comment, 'media_url': settings.MEDIA_URL,}
+
+    template = 'reply.html'
+    
+    return render(request, template, context)
 
 
 
@@ -182,12 +193,52 @@ def comment(request, property_id, username):
             post_id = property_id,
             author = request.user,
             to = username,
+            Username = request.user.get_full_name(),
             
         )
-    return JsonResponse({'success':'success'})
+    
+    
+    post_html = loader.render_to_string('comment.html', {'comment' : user})
 
+    output_data = {
+        'post_html' : post_html,
+    }
+    return JsonResponse(output_data)
+
+@csrf_exempt
+def send_reply(request, comment_id, username):
+    reply = request.POST['comment']
+    time = request.POST['time']
+    print(reply)
+    user = Reply.objects.create(
+            reply = reply,
+            time= time,
+            rep_id = comment_id,
+            Username = request.user.get_full_name(),
+            to = username,
+        
+        )
     
     
+    post_html = loader.render_to_string('send_reply.html', {'comment' : user})
+
+    output_data = {
+        'post_html' : post_html,
+    }
+    return JsonResponse(output_data)
+
+@csrf_exempt
+def commentlist(request, property_id, username):
+
+    comment = Comment.objects.filter(post_id=property_id)
+    post_html = loader.render_to_string('comment.html', {'comment' : comment})
+
+    output_data = {
+        'post_html' : post_html,
+    }
+    return JsonResponse(output_data)
+
+
 
 def show_property(request, property_id, username):
     form = SignUpForm(data=request.POST)
@@ -199,16 +250,10 @@ def show_property(request, property_id, username):
     
     return render(request, 'view_property.html', {'form2': form2,'comment': comment,'form': form,"person":user,'property': propertyy, 'media_url': settings.MEDIA_URL,})
 
-def show_property_ajax(request, property_id):
-     
 
-    propertyy = Agentuploads.objects.get(id=property_id)
 
-    context = {'property': propertyy, 'media_url': settings.MEDIA_URL,}
 
-    template = 'view_property_ajax.html'
-    
-    return render(request, template, context)
+
 
 
 

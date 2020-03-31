@@ -141,7 +141,7 @@ scroll-behavior: smooth;
         <span class="close">&times;</span>
         
         
-        <h1>Login Agent</h1>
+        <h1>Login</h1>
         {% load static %}
             <form id="LoginForm" action="{% url 'UserLogin'  %}">
             {% csrf_token %}
@@ -195,10 +195,13 @@ scroll-behavior: smooth;
                                     ><img src="{{property.file.url}}" style=" height:150px;width:100% "></div>
                             
                             <div  class="card-body">
+                            <span style='font-weight: 20px;'>₦{{property.price}},000</span>
+                                <br>
                                 <span  id="view{{ property.id }}"  style="text-size:10px; color: black;"><span style='font-weight: 20px;'>Location: </span>{{property.property_Location}}
                                 <br>
-                                <span style='font-weight: 20px;'>Property Name: </span>{{property.property_Name}}</span></a>
+                                <span style='font-weight: 20px;'>Property Name: </span>{{property.property_Name}}</span>
                                 <br>
+                                
                                 <span class="text-warning">Not verified</span>
                                 
                             </div>
@@ -240,6 +243,7 @@ $('#view{{ property.id }}').click(function(e) {
               <div style="width: 100%; text-align: center; font-size: 20px;">
               
               <a id="more" href="javascripts:void(0);" data-page="2" > more </a>
+              <img id="loading_img" style="display:none;" src="{% static 'loading.gif' %}">
               <h5 id="no_more" style="color: red; display: none;"> No more property</h5>
               </div> 
     </div>
@@ -269,6 +273,8 @@ $("#more").click(function(e){
        e.preventDefault();
        var link = $(this);
        var page = link.data('page');
+       $('#more').hide();
+       $('#loading_img').show();
     $.ajax({
 
                 type: 'post',
@@ -283,8 +289,11 @@ $("#more").click(function(e){
 
                   if (response.has_next){
                     link.data('page', page+1);
+                    $('#loading_img').hide();
+                    $('#more').show()
                   } else{
                     link.hide();
+                    $('#loading_img').hide();
                     $('#no_more').show();
                   }
 

@@ -24,6 +24,8 @@ urlpatterns = [
      path('osasoge/', views.osasoge, name="osasoge"),
      path('UpdateProfile/<user_id>/', views.UpdateProfile, name="UpdateProfile"),
      path('UpdateProfilePicx/<user_id>/', views.upload_profilePicx, name="UpdateProfilePicx"),
+     path('delete/<id_image>/', views.delete, name='delete'),
+     path('view_Agentproperty/<str:property_id>//<str:username>/', views.show_Agentproperty, name='view_Agentproperty'),
 ]
 
 

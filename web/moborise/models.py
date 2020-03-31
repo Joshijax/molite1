@@ -6,6 +6,7 @@ from django.db.models.signals import post_save, post_delete, post_init
 from django.dispatch import receiver
 from django.conf import settings
 import os
+from Agent.models import Agentuploads
 
 def user_directory_path(instance, filename, **kwargs):
     file_path = 'gallery/profile/{filename}'.format( filename=filename)
@@ -35,8 +36,22 @@ class UserType(models.Model):
         return super().save(*args, **kwargs)
 
 class Comment(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, related_name='TheUser', on_delete=models.CASCADE)
     text = models.TextField()
+    post_id = models.IntegerField(default='0')
+    Username = models.CharField(max_length = 100, )
+    time = models.CharField(max_length = 100, )
+    created_date = models.DateTimeField(auto_now_add=True)
+    to = models.CharField(max_length = 100, )
+    
+
+    def __str__(self):
+        return self.text
+
+class Reply(models.Model):
+    rep = models.ForeignKey(Comment, related_name="reply", on_delete=models.CASCADE)
+    reply = models.TextField()
+    Username = models.CharField(max_length = 100, )
     post_id = models.IntegerField(default='0')
     time = models.CharField(max_length = 100, )
     created_date = models.DateTimeField(auto_now_add=True)

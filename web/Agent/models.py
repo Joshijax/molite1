@@ -4,6 +4,7 @@ from django.utils.text import slugify
 from django.contrib.auth.models import AbstractUser, User
 from django.db.models.signals import post_save, post_delete, post_init
 from django.dispatch import receiver
+
 #from rest_framework.authtoken.models import Token 
 import os
 
@@ -23,7 +24,7 @@ def user_directory_path(instance, filename, **kwargs):
 
 class Agentuploads(models.Model):
     file = models.FileField(upload_to=user_directory_path, null=False, blank=False)
-    file2 = models.FileField(upload_to=user_directory_path, null=False, blank=False)
+    
     filename = models.CharField(max_length = 100, blank=True)
     username = models.CharField(max_length = 100)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,null=False, blank=False)
@@ -45,16 +46,20 @@ class Agentuploads(models.Model):
         return '%s' % (self.file.name)
 
     def delete(self, *args, **kwargs):
-        os.remove(os.path.join(settings.MEDIA_ROOT, self.filename))
-        super(Agentuploads,self).delete(*args,**kwargs)
+        os.remove(os.path.join(settings.MEDIA_ROOT, self.file.name))
+        if self.uploadsfile:
+            self.uploadsfile.delete()
+        Agentuploads.delete()
 
     def save(self, *args, **kwargs):
         self.slug = slugify(self.property_Description, allow_unicode=True)
         super(Agentuploads, self).save(*args, **kwargs)
 
 
-
-
+class uploadsfile(models.Model):
+    post = models.ForeignKey(Agentuploads, related_name="picture", on_delete=models.CASCADE,)
+    file = models.FileField(upload_to='gallery/', null=True, blank=True)
+   
 
 
 # @receiver(post_save, sender= settings.AUTH_USER_MODEL)

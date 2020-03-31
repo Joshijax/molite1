@@ -37,7 +37,6 @@ class AgentUploadFileForm(forms.ModelForm):
     
     file = forms.FileField(widget=forms.ClearableFileInput(attrs={'placeholder':'input your password', 'class': 'upload-input',   'oninput' : 'input_filename();','multiple': 'multiple', 'accept' : 'image/jpg, image/gif/png, image/jpeg', }))
 
-    file2 = forms.FileField(widget=forms.ClearableFileInput(attrs={'placeholder':'input your password','required':'false',  'class': 'upload-input',   'oninput' : 'input_filename2();', 'accept' : 'image/jpg, image/gif/png, image/jpeg', }))
     
     property_Address = forms.CharField(widget=forms.TextInput(attrs={'placeholder':'Name of Address' }))
     property_Name = forms.CharField(widget=forms.TextInput(attrs={'placeholder':'Name of Property' }))
@@ -46,12 +45,22 @@ class AgentUploadFileForm(forms.ModelForm):
     property_Type = forms.CharField(label='Type of Property', widget=forms.Select(choices=Property_type))
     prize = forms.IntegerField(label='Amount to rent', widget=forms.Select(choices=INTEGER_CHOICES))
 
+    
+
+    def form_valid(self, form):
+         obj = form.save(commit=False)
+         if self.request.FILES:
+            for f in self.request.FILES.getlist('file'):
+                obj = self.model.objects.create(file=f)
+                
+                return super(AgentUploadFileForm, self).form_valid(form)
+
 
 
     
     class Meta:
         model = Agentuploads
-        fields = ('file', 'file2' ,'property_Name', 'property_Location', 'property_Description', 'property_Type', 'prize')
+        fields = ('file' ,'property_Name', 'property_Location', 'property_Description', 'property_Type', 'prize')
 
 
 
@@ -66,6 +75,7 @@ class AgentSignUpForm(UserCreationForm):
     password1 = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder':'input your password' }))
     password2= forms.CharField(widget=forms.PasswordInput(attrs={'placeholder':'confirm password' }))
 
+    
 
     class Meta:
         model = User

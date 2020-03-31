@@ -24,6 +24,9 @@
     <link rel="stylesheet" href="{% static 'style/style.css' %}">
     <link rel="stylesheet" href="{% static 'style2.css' %}">
     <link rel="stylesheet" href="{% static 'css/swiper.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'lightbox.min.css' %}">
+    <script src="{% static 'lightbox-plus-jquery.min.js' %}"></script>
     
  
     
@@ -152,24 +155,27 @@
 <div class="container">
   <div class="row">
     <div class="col-sm-12 ">
-      <div class="view-port">
+      <div style="padding: 30px 20px 20px 20px;" class="view-port">
           <div class="image-port">
             <div class="swiper-container">
               <div class="swiper-wrapper">
-                  <div class="swiper-slide"><img src="{{property.file.url}}" style=" "></div>
-                  {% if property.file2 %}
-                  <div class="swiper-slide"><img src="{{property.file2.url}}" style=" "></div>
-                  {% endif %}
+                  <div class="swiper-slide"><a href="{{property.file.url}}" data-lightbox="mygallery"><img src="{{property.file.url}}" style=" "></a></div>
+                  {% for img in property.picture.all %}
+                  
+                  <div class="swiper-slide"><a href="{{img.file.url}}" data-lightbox="mygallery"><img src="{{img.file.url}}" style=" "></a></div>
+                  {% endfor %}
                 </div>
                 <div class="swiper-pagination"></div>
               </div>
           </div>
           <div style="margin-bottom: 20px;" class = "view-info">
-            
-            <h5><object class="imgCircle" width="50" height="50" data="{{ person.profilePicx.img.url }}" type="image/jpg">
-                                          <img class="imgCircle" width="250" height="300" src="{% static 'profile2.png' %}" alt="Stack Overflow logo and icons and such">
-                                        </object>  {{person.first_name}}  {{person.last_name}}</h5>
+            <div style="align-items: center; display: flex; margin-left: 20px;">
+            <object class="imgCircle" width="50" height="50" data="{{ person.profilePicx.img.url }}" type="image/jpg">
+                <img class="imgCircle" width="250" height="300" src="{% static 'profile2.png' %}" alt="Stack Overflow logo and icons and such">
+              </object><span style="margin: 20px; font-size: 20px;"> {{person.first_name}}  {{person.last_name}}</span></div>
+              {% if person.profile.Business_Name%}
             <h5>Business Name : {{ person.profile.Business_Name}}</h5>
+            {% endif%}
             <a href="tel:+62896706255135">Call {{property.agent}} at +62-896-7062-55135</a><br>
             <span  id=""  style="text-size:10px; color: black;"><span style='font-weight: 20px; font-size: 15px;'>Location: </span>{{property.property_Location}}
                                 <br>
@@ -198,10 +204,48 @@
                             </div>
                             <div class="commentText">
                             
-                                <p class="">{{ comment.text}}</p> <span class="date sub-text">{{ comment.time}}</span>
+                                <p class=""><b style="font-size: 15px;">{{ comment.author.last_name }} {{ comment.author.first_name }}  </b>{{ comment.text}} <a id="reply{{comment.id}}" href="" data-page="{{ comment.id }}">  reply ( {{ comment.reply.all|length }} )</a></p>  <span class="date sub-text">{{ comment.time}}</span>
 
                             </div>
                         </li>
+                        <script>
+                        $("#reply{{comment.id}}").click(function(e){
+                            e.preventDefault();
+                            var link = $(this);
+                            var page = link.data('page');
+                          $.ajax({
+
+                                      type: "POST",
+                                      url: "{% url 'reply' %}",
+                                    
+                                      data:{
+                                        'page': page,
+                                        
+                                      },
+                                      
+                                      success:function(response){
+
+                                        if (response.has_next){
+                                          link.data('page', page+1);
+                                        } else{
+                                          link.hide();
+                                          $('#no_more').show();
+                                        }
+
+                                
+                                        $('.actionBox').html(response)
+                                        
+                                      
+                                      },
+                                      error: function(data) {
+                                        $('#Notifications').html(data.message).css('color', 'red');
+                                      
+                                      }
+                                    });
+
+                      }); 
+
+                  </script>
                     {% endfor %}
                       </ul>
                     <form id="commentbox" class="form-inline" role="form">
@@ -223,7 +267,7 @@
         <span class="close">&times;</span>
         
         
-        <h1>Login Agent</h1>
+        <h1>Login To Comment\</h1>
         {% load static %}
             <form id="LoginForm" action="{% url 'UserLogin'  %}">
             {% csrf_token %}
@@ -253,7 +297,11 @@
 
     </div>
 {% if user.is_authenticated %}
+
 <script>
+
+
+
   $(document).on('submit', '#commentbox', function(e){
               e.preventDefault();
 
@@ -278,7 +326,7 @@
                 + dt.getMinutes() + ":" 
                 + dt.getSeconds() + strampm;
 
-              $('.commentList').append('<li><div class="commenterImage"><img src="http://placekitten.com/40/40" /></div><div class="commentText"><p >'+ comment +'</p> <span class="date sub-text">'+ time +'</span></div></li>');
+              
               $("#commentbox")[0].reset();
               $.ajax({
 
@@ -295,7 +343,7 @@
                 success:function(response){
                 
                   
-                  
+                  $('.commentList').append(response.post_html)
                   
                 
                 },
@@ -305,6 +353,7 @@
                 }
               });
             });
+
 
 
             
